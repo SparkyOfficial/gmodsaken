@@ -12,14 +12,14 @@ _G.GAMEMODE = GM
 
 -- Система стамины
 GM.StaminaSystem = {
-    MaxStamina = 100,            -- Максимальная стамина для выживших
-    KillerMaxStamina = 225,      -- Максимальная стамина для убийцы
-    StaminaDrainRate = 0.5,      -- Уменьшено с 1.0 до 0.5
-    StaminaRegenRate = 0.3,      -- Уменьшено с 0.5 до 0.3
-    SprintStaminaCost = 0.8,     -- Уменьшено с 1.0 до 0.8
-    JumpStaminaCost = 5,
-    AttackStaminaCost = 3,
-    MinStaminaForSprint = 1      -- Минимальная стамина для бега
+    MaxStamina = GM:GetConfig("Characters.Survivor.Stamina", 100),
+    KillerMaxStamina = GM:GetConfig("Characters.Killer.Stamina", 225),
+    StaminaDrainRate = GM:GetConfig("Gameplay.Stamina.DrainRate", 0.5),
+    StaminaRegenRate = GM:GetConfig("Gameplay.Stamina.RegenRate", 0.3),
+    SprintStaminaCost = GM:GetConfig("Gameplay.Stamina.SprintCost", 0.8),
+    JumpStaminaCost = GM:GetConfig("Gameplay.Stamina.JumpCost", 5),
+    AttackStaminaCost = GM:GetConfig("Gameplay.Stamina.AttackCost", 3),
+    MinStaminaForSprint = GM:GetConfig("Gameplay.Stamina.MinForSprint", 1)
 }
 
 -- Глобальная настройка для отключения стамины

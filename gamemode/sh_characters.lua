@@ -16,8 +16,7 @@ GM.SurvivorCharacters = {
         id = "gordon",
         name = "Гордон Фримен",
         model = "models/player/gmodsaken/gordon/dr freeman.mdl",
-        health = 100,
-        armor = 100,
+
         speed = 1.0,
         description = "Главный герой, физик-теоретик"
     },
@@ -25,8 +24,7 @@ GM.SurvivorCharacters = {
         id = "rebel",
         name = "Повстанец",
         model = "models/player/group03/male_07.mdl",
-        health = 100,
-        armor = 0,
+
         speed = 1.1,
         description = "Борец за свободу"
     },
@@ -34,8 +32,7 @@ GM.SurvivorCharacters = {
         id = "medic",
         name = "Медик",
         model = "models/player/group03m/male_07.mdl",
-        health = 100,
-        armor = 0,
+
         speed = 1.0,
         description = "Медицинский работник"
     },
@@ -43,8 +40,7 @@ GM.SurvivorCharacters = {
         id = "engineer",
         name = "Инженер",
         model = "models/player/group01/male_05.mdl",
-        health = 100,
-        armor = 10,
+
         speed = 1.0,
         description = "Технический специалист"
     },
@@ -52,8 +48,7 @@ GM.SurvivorCharacters = {
         id = "guard",
         name = "Охраник",
         model = "models/player/odessa.mdl",
-        health = 100,
-        armor = 10,
+
         speed = 1.0,
         description = "Служба безопасности"
     },
@@ -61,8 +56,7 @@ GM.SurvivorCharacters = {
         id = "mayor",
         name = "Мэр",
         model = "models/player/breen.mdl",
-        health = 80,
-        armor = 0,
+
         speed = 0.8,
         description = "Глава города"
     }
@@ -74,8 +68,7 @@ GM.KillerCharacters = {
         id = "butcher",
         name = "Мясной",
         model = "models/zombie/poison.mdl",
-        health = 3000,
-        armor = 0,
+
         speed = 0.9,
         damage = 2.0,
         description = "Жестокий мясник"
@@ -121,13 +114,10 @@ function GM:ApplyCharacter(ply, characterName)
     -- Сохраняем выбор
     ply.SelectedCharacter = characterName
     
-    -- Применяем характеристики
-    ply:SetMaxHealth(character.health)
-    ply:SetHealth(character.health)
-    
-    -- Применяем броню
-    if character.armor then
-        ply:SetArmor(character.armor)
+    -- Применяем скорость
+    if character.speed then
+        ply:SetWalkSpeed(200 * character.speed)
+        ply:SetRunSpeed(400 * character.speed)
     end
     
     -- Применяем скорость

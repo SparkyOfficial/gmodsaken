@@ -18,6 +18,9 @@ GM.Email 		= ""
 GM.Website 		= ""
 GM.FolderName 	= "gmodsaken"
 
+-- Подключаем центральный файл конфигурации
+include("sh_config.lua")
+
 -- Базовые настройки гейммода
 GM.Base = "base"
 GM.TeamBased = true
@@ -25,17 +28,17 @@ GM.AllowAutoTeam = false
 GM.AllowSpectating = true
 GM.SelectClass = true
 GM.SecondsBetweenTeamSwitches = 10
-GM.GameLength = 600 -- 10 минут
+GM.GameLength = GM:GetConfig("Gameplay.RoundTime", 600)
 GM.RoundLimit = 5
 GM.VotingDelay = 5
 GM.ShowTeamName = true
 
 -- Настройки режима
 GM.GameState = "LOBBY" -- LOBBY, PREPARING, PLAYING, ENDING
-GM.MinPlayers = 3
-GM.LobbyTime = 30 -- секунды подготовки
-GM.RoundTime = 600 -- 10 минут раунда
-GM.EndTime = 10 -- секунды показа результатов
+GM.MinPlayers = GM:GetConfig("Gameplay.MinPlayers", 3)
+GM.LobbyTime = GM:GetConfig("Gameplay.LobbyTime", 30)
+GM.RoundTime = GM:GetConfig("Gameplay.RoundTime", 600)
+GM.EndTime = GM:GetConfig("Gameplay.EndTime", 10)
 
 -- Команды
 GM.TEAM_SPECTATOR = 1
@@ -177,33 +180,11 @@ end
 -- 	end
 -- end
 
--- Загрузка настроек из .txt файла
-if SERVER then
-    -- Создаем ConVars для настроек
-    CreateConVar("gmodsaken_default_map", "gm_construct", FCVAR_REPLICATED, "Default map for GModsaken gamemode")
-    CreateConVar("gmodsaken_auto_respawn", "0", FCVAR_REPLICATED, "Auto respawn players after death")
-    CreateConVar("gmodsaken_respawn_time", "3", FCVAR_REPLICATED, "Time in seconds before respawn")
-    CreateConVar("gmodsaken_min_players", "3", FCVAR_REPLICATED, "Minimum players to start round")
-    CreateConVar("gmodsaken_lobby_time", "30", FCVAR_REPLICATED, "Lobby preparation time")
-    CreateConVar("gmodsaken_round_time", "600", FCVAR_REPLICATED, "Round duration in seconds")
-end
-
 -- Отключаем автоматическую загрузку файлов - теперь файлы загружаются вручную в init.lua и cl_init.lua
 -- recursiveInclusion( GM.FolderName .. "/gamemode", true )
 
--- Обновляем настройки из ConVars и инициализируем команды
+-- Инициализируем команды
 hook.Add("Initialize", "GModsakenLoadSettings", function()
-    if SERVER then
-        GM.DefaultMap = GetConVar("gmodsaken_default_map"):GetString()
-        GM.AutoRespawn = GetConVar("gmodsaken_auto_respawn"):GetBool()
-        GM.RespawnTime = GetConVar("gmodsaken_respawn_time"):GetInt()
-        GM.MinPlayers = GetConVar("gmodsaken_min_players"):GetInt()
-        GM.LobbyTime = GetConVar("gmodsaken_lobby_time"):GetInt()
-        GM.RoundTime = GetConVar("gmodsaken_round_time"):GetInt()
-        
-        print("GModsaken: Настройки загружены из ConVars")
-    end
-    
     -- Создаем команды
     if GM.CreateTeams then
         GM:CreateTeams()
@@ -289,6 +270,8 @@ end)
 if SERVER then
     util.AddNetworkString("GModsaken_UpdateGameState")
     util.AddNetworkString("GModsaken_UpdateTimer")
+    util.AddNetworkString("GModsaken_UpdateQuest")
+    util.AddNetworkString("GModsaken_ResetPropCooldown")
     util.AddNetworkString("GModsaken_PlayChaseMusic")
     util.AddNetworkString("GModsaken_StopChaseMusic")
     util.AddNetworkString("GModsaken_BlindPlayer")
@@ -341,8 +324,24 @@ concommand.Add("gmodsaken_reset_cooldown", function(ply, cmd, args)
         return
     end
     
-    if CLIENT then
-        propCooldown = 0
-        ply:ChatPrint("Кулдаун пропов сброшен!")
+    if SERVER then
+        -- Отправляем сообщение всем клиентам
+        net.Start("GModsaken_ResetPropCooldown")
+        net.Broadcast()
+        
+        ply:ChatPrint("Кулдаун пропов сброшен для всех игроков!")
+        print("Admin " .. ply:Nick() .. " reset prop cooldown for all players.")
     end
 end)
+
+-- Сетевое сообщение для сброса кулдауна на клиенте
+if CLIENT then
+    net.Receive("GModsaken_ResetPropCooldown", function()
+        if _G.propCooldown then
+            _G.propCooldown = 0
+        end
+        
+        -- Уведомляем игрока
+        chat.AddText(Color(255, 100, 100), "[АДМИН]", Color(255, 255, 255), " Кулдаун создания пропов был сброшен.")
+    end)
+end

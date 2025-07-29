@@ -26,7 +26,25 @@ GM.Config.Gameplay = {
     MinPlayers = 3,           -- Минимальное количество игроков для начала
     RoundTime = 600,          -- Время раунда в секундах
     LobbyTime = 30,           -- Время в лобби перед началом раунда
+    EndTime = 10,             -- Время показа результатов в конце раунда
     RespawnTime = 10          -- Время возрождения после смерти
+}
+
+-- Настройки персонажей
+GM.Config.Characters = {
+    Survivor = {
+        Health = 100,
+        Stamina = 100,
+        Armor = {
+            Default = 0,
+            Max = 100,
+            Absorption = 0.5 -- 50% поглощения урона
+        }
+    },
+    Killer = {
+        Health = 3000,
+        Stamina = 225
+    }
 }
 
 -- Функция для получения настройки

@@ -338,8 +338,16 @@ function GM:ApplyCharacterToPlayer(ply, characterName)
     if character.stats then
         ply:SetWalkSpeed(character.stats.walkSpeed or 200)
         ply:SetRunSpeed(character.stats.runSpeed or 400)
-        ply:SetMaxHealth(character.stats.maxHealth or 100)
-        ply:SetHealth(character.stats.maxHealth or 100)
+
+        if character.team == GM.TEAM_KILLER then
+            ply:SetHealth(GM:GetConfig("Characters.Killer.Health", 3000))
+            ply:SetMaxHealth(GM:GetConfig("Characters.Killer.Health", 3000))
+            ply:SetArmor(GM:GetConfig("Characters.Killer.Armor", 150))
+        else
+            ply:SetHealth(GM:GetConfig("Characters.Survivor.Health", 100))
+            ply:SetMaxHealth(GM:GetConfig("Characters.Survivor.Health", 100))
+            ply:SetArmor(GM:GetConfig("Characters.Survivor.Armor", 0))
+        end
     end
     
     -- Применяем броню
