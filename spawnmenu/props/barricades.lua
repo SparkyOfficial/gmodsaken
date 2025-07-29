@@ -1,0 +1,60 @@
+--[[
+    GModsaken - Barricades Props
+    Copyright (C) 2024 GModsaken Contributors
+]]
+
+-- Реальные модели баррикад из Garry's Mod
+local barricades = {
+    "models/props_junk/wooden_box01a.mdl",
+    "models/props_junk/wooden_box02a.mdl",
+    "models/props_junk/wooden_box03a.mdl",
+    "models/props_junk/wooden_box04a.mdl",
+    "models/props_junk/wooden_box05a.mdl",
+    "models/props_junk/wooden_box06a.mdl",
+    "models/props_junk/wooden_box07a.mdl",
+    "models/props_junk/wooden_box08a.mdl",
+    "models/props_junk/wooden_box09a.mdl",
+    "models/props_junk/wooden_box10a.mdl",
+    "models/props_junk/wooden_box11a.mdl",
+    "models/props_junk/wooden_box12a.mdl",
+    "models/props_junk/wooden_box13a.mdl",
+    "models/props_junk/wooden_box14a.mdl",
+    "models/props_junk/wooden_box15a.mdl",
+    "models/props_junk/wooden_box16a.mdl",
+    "models/props_junk/wooden_box17a.mdl",
+    "models/props_junk/wooden_box18a.mdl",
+    "models/props_junk/wooden_box19a.mdl",
+    "models/props_junk/wooden_box20a.mdl",
+    "models/props_junk/wooden_box21a.mdl",
+    "models/props_junk/wooden_box22a.mdl",
+    "models/props_junk/wooden_box23a.mdl",
+    "models/props_junk/wooden_box24a.mdl",
+    "models/props_junk/wooden_box25a.mdl",
+    "models/props_junk/wooden_box26a.mdl",
+    "models/props_junk/wooden_box27a.mdl",
+    "models/props_junk/wooden_box28a.mdl",
+    "models/props_junk/wooden_box29a.mdl",
+    "models/props_junk/wooden_box30a.mdl",
+    "models/props_junk/wooden_box31a.mdl",
+    "models/props_junk/wooden_box32a.mdl",
+    "models/props_junk/wooden_box33a.mdl",
+    "models/props_junk/wooden_box34a.mdl",
+    "models/props_junk/wooden_box35a.mdl",
+    "models/props_junk/wooden_box36a.mdl",
+    "models/props_junk/wooden_box37a.mdl",
+    "models/props_junk/wooden_box38a.mdl",
+    "models/props_junk/wooden_box39a.mdl",
+    "models/props_junk/wooden_box40a.mdl",
+    "models/props_junk/wooden_box41a.mdl",
+    "models/props_junk/wooden_box42a.mdl",
+    "models/props_junk/wooden_box43a.mdl",
+    "models/props_junk/wooden_box44a.mdl",
+    "models/props_junk/wooden_box45a.mdl",
+    "models/props_junk/wooden_box46a.mdl",
+    "models/props_junk/wooden_box47a.mdl",
+    "models/props_junk/wooden_box48a.mdl",
+    "models/props_junk/wooden_box49a.mdl",
+    "models/props_junk/wooden_box50a.mdl"
+}
+
+return barricades 

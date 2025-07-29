@@ -1,0 +1,9 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models\lenoax\YoungGordon\YoungGordon_hair_Diff"
+	"$basetexture" "models\lenoax\YoungGordon\YoungGordon_hair_Normal"
+	"$lightwarptexture" "models/lenoax/OldGordon/base_m_caucasian_wrp"
+
+	"$color2" "[ 0.35 0.35 0.35 ]"
+	"$color2" "{ 1 1 1 }"
+}

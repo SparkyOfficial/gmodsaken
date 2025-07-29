@@ -1,0 +1,56 @@
+"gmodsaken"
+{
+	"base"		    "base"
+	"title"		    "GModsaken - Survival Horror"
+	"maps"		    "^gm_"
+	"category"	    "other"
+	"menusystem"	"1"
+
+	"settings"
+	{
+		1
+		{
+			"name"		"gmodsaken_min_players"
+			"text"		"Minimum Players"
+			"help"		"Minimum number of players required to start a round"
+			"type"		"Numeric"
+			"default"	"3"
+		}
+
+		2
+		{
+			"name"		"gmodsaken_lobby_time"
+			"text"		"Lobby Time"
+			"help"		"Time in seconds for lobby preparation"
+			"type"		"Numeric"
+			"default"	"30"
+		}
+
+		3
+		{
+			"name"		"gmodsaken_round_time"
+			"text"		"Round Time"
+			"help"		"Round duration in seconds"
+			"type"		"Numeric"
+			"default"	"600"
+		}
+
+		4
+		{
+			"name"		"gmodsaken_killer_health"
+			"text"		"Killer Health"
+			"help"		"Health points for the killer"
+			"type"		"Numeric"
+			"default"	"3000"
+		}
+
+		5
+		{
+			"name"		"gmodsaken_survivor_health"
+			"text"		"Survivor Health"
+			"help"		"Health points for survivors"
+			"type"		"Numeric"
+			"default"	"100"
+		}
+	}
+}

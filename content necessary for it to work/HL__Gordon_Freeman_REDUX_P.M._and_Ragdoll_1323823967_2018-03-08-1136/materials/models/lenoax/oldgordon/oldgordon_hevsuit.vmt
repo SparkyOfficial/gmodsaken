@@ -1,0 +1,22 @@
+"vertexlitgeneric"
+{
+	"$baseTexture" "models\lenoax\OldGordon\OldGordon_HevSuit_diff"	
+	"$bumpmap" "models\lenoax\OldGordon\OldGordon_HevSuit_Normal"
+	
+	"$halflambert" "0"
+
+	"$selfillum" "1"
+	
+	"$phong" "1"
+	"$phongboost" "2"
+	"$PhongExponentTexture" "models\lenoax\OldGordon\OldGordon_HevSuit_Exp"
+	"$phongfresnelranges" "[.5 2 8]"
+	"$PhongAlbedoTint" "1"
+	"$phongtint" "[.6 .7 .65]"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "16"
+	"$rimlightboost" ".4"
+
+	
+}

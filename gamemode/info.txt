@@ -1,0 +1,11 @@
+"AddonInfo"
+{
+    "name"              "GModsaken"
+    "version"           "1.0"
+    "up_date"           "01/01/2024"
+    "author_name"       "Your Name"
+    "author_email"      ""
+    "author_url"        ""
+    "info"              "Базовый гейммод GModsaken для Garry's Mod с картой gm_construct по умолчанию"
+    "override"          "0"
+} 

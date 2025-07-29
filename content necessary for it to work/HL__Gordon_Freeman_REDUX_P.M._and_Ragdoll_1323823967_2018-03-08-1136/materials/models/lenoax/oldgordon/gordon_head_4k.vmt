@@ -1,0 +1,22 @@
+"VertexLitGeneric"
+{
+	"$basetexture" 		"models/lenoax/OldGordon/Gordon_head_Diff"
+	"$bumpmap" 		"models/lenoax/OldGordon/Gordon_head_Normal"
+	"$lightwarptexture" 	"models/lenoax/OldGordon/base_m_caucasian_wrp"
+
+	"$phong" "1"
+	"$phongalbedotint" "1"
+	"$phongexponent" "2"
+//	"$phongexponenttexture" "models/lenoax/OldGordon/OldGordon_head_Exp"
+        "$phongboost"	"0.2"
+	"$phongfresnelranges"	"[1 2 4]"
+	"$halflambert" "1"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "5"
+	"$rimlightboost" "1"
+	"$rimHat" "1"
+
+	"$nocull" "1"
+
+}
