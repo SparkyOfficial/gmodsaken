@@ -1,0 +1,10 @@
+"UnlitGeneric"
+{
+	"$translucent" 1
+	"$baseTexture" "hud\building_bar_health_red"
+	"$vertexcolor" 1
+	"$no_fullbright" 1
+	"$ignorez" 1
+	"%keywords" "tf"
+}
+

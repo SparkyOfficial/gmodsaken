@@ -1,0 +1,26 @@
+
+AddCSLuaFile( "cl_init.lua" )
+AddCSLuaFile( "shared.lua" )
+
+include( "shared.lua" )
+
+SWEP.Weight				= 5			// Decides whether we should switch from/to this
+SWEP.AutoSwitchTo		= true		// Auto switch to if we pick it up
+SWEP.AutoSwitchFrom		= true		// Auto switch from if you pick up a better weapon
+SWEP.MetalToGive = 100
+SWEP.SequenceDelay = 1.25
+SWEP.DrawDelay = 0.6
+
+SWEP.MinDamage = 45
+SWEP.MaxDamage = 85
+SWEP.CritDamage = 195
+
+SWEP.Swing = Sound( "weapons/cbar_miss1.wav" )
+SWEP.SwingCrit = Sound( "weapons/cbar_miss1_crit.wav" )
+SWEP.HitFleshIntact = { Sound( "weapons/bottle_intact_hit_flesh1.wav" ), Sound( "weapons/bottle_intact_hit_flesh2.wav" ), Sound( "weapons/bottle_intact_hit_flesh3.wav" ) }
+SWEP.HitWorldIntact = { Sound( "weapons/bottle_intact_hit_world1.wav" ), Sound( "weapons/bottle_intact_hit_world2.wav" ) }
+SWEP.HitFleshBroken = { Sound( "weapons/bottle_broken_hit_flesh1.wav" ), Sound( "weapons/bottle_broken_hit_flesh2.wav" ), Sound( "weapons/bottle_broken_hit_flesh3.wav" ) }
+SWEP.HitWorldBroken = { Sound( "weapons/bottle_broken_hit_world1.wav" ), Sound( "weapons/bottle_broken_hit_world2.wav" ), Sound( "weapons/bottle_broken_hit_world3.wav" ) }
+
+SWEP.Primary.Delay = 0.8
+

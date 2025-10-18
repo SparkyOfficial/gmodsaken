@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models\lenoax\YoungGordon\YoungGordon_hair_Diff"
+	"$lightwarptexture" "models/lenoax/Oldgordon/base_m_caucasian_wrp"
+}

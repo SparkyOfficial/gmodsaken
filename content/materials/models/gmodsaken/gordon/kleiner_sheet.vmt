@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "Models/lenoax/gordon/kleiner_sheet"
+	"$lightwarptexture" "models/lenoax/gordon/base_m_caucasian_wrp"
+	"$halflambert" 1
+}
