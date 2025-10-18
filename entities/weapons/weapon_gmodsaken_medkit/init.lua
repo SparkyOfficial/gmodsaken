@@ -163,6 +163,7 @@ function SWEP:SecondaryAttack()
     local currentHealth = closestTeammate:Health()
     local maxHealth = closestTeammate:GetMaxHealth()
     local newHealth = math.min(currentHealth + self.HealAmount, maxHealth)
+    local healAmount = newHealth - currentHealth
     closestTeammate:SetHealth(newHealth)
     
     -- Звук лечения
@@ -176,6 +177,13 @@ function SWEP:SecondaryAttack()
     -- Уведомляем игроков
     owner:ChatPrint("Вы вылечили " .. closestTeammate:Nick() .. "! Здоровье: " .. newHealth .. "/" .. maxHealth)
     closestTeammate:ChatPrint(owner:Nick() .. " вылечил вас! Здоровье: " .. newHealth .. "/" .. maxHealth)
+    
+    -- Награждаем XP за помощь товарищу
+    if healAmount > 0 and SERVER then
+        if GAMEMODE and GAMEMODE.AwardAssistXP then
+            GAMEMODE:AwardAssistXP(owner, "heal")
+        end
+    end
     
     self:SetNextSecondaryFire(CurTime() + 1.0)
 end

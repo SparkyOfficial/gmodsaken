@@ -136,6 +136,11 @@ function SWEP:PrimaryAttack()
             -- Обновляем время последней постройки
             self.LastTurret = CurTime()
             
+            -- Награждаем XP за постройку турели
+            if SERVER and GAMEMODE and GAMEMODE.AwardAssistXP then
+                GAMEMODE:AwardAssistXP(owner, "repair")
+            end
+            
             owner:ChatPrint("Турель построена! Следующая будет готова через " .. self.TurretCooldown .. " секунд.")
         end
     end
@@ -195,6 +200,11 @@ function SWEP:SecondaryAttack()
             
             -- Обновляем время последней постройки
             self.LastDispenser = CurTime()
+            
+            -- Награждаем XP за постройку раздатчика
+            if SERVER and GAMEMODE and GAMEMODE.AwardAssistXP then
+                GAMEMODE:AwardAssistXP(owner, "repair")
+            end
             
             owner:ChatPrint("Раздатчик построен! Следующий будет готов через " .. self.DispenserCooldown .. " секунд.")
         end

@@ -119,6 +119,11 @@ function GM:AwardQuestReward(ply, questName)
     local quest = self:GetQuest(questName)
     if not quest then return end
     
+    -- Награждаем XP за выполнение квеста
+    if SERVER and self.AwardQuestXP then
+        self:AwardQuestXP(ply, questName)
+    end
+    
     -- Уменьшаем время раунда
     if SERVER and self.GameState == "PLAYING" then
         self.RoundTime = math.max(60, (self.RoundTime or 600) + quest.rewardTime)

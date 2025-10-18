@@ -5,7 +5,7 @@
 
 SWEP.PrintName = "Топор Мясного"
 SWEP.Author = "GModsaken"
-SWEP.Instructions = "ЛКМ - атака, ПКМ - заражение (создает хедкрабов), R - лазер из глаз"
+SWEP.Instructions = "ЛКМ - атака, ПКМ - заражение (создает хедкрабов), R - лазер из глаз, Shift - рывок"
 SWEP.Category = "GModsaken Weapons"
 
 SWEP.Spawnable = true
@@ -53,8 +53,11 @@ SWEP.Secondary.Delay = 5.0
 SWEP.Range = 120
 
 -- Способности
-SWEP.InfectionCooldown = 0
-SWEP.LaserCooldown = 0
+SWEP.InfectionCooldown = 30
+SWEP.LaserCooldown = 15
+SWEP.LungeCooldown = 10
+SWEP.LungeDistance = 300
+SWEP.LungeDamage = 30
 
 -- Функция для установки модели рук
 function SWEP:SetViewModelArms(ply)
@@ -70,4 +73,4 @@ function SWEP:SetViewModelArms(ply)
     if armsModel and util.IsModelLoaded(armsModel) then
         viewmodel:SetModel(armsModel)
     end
-end 
+end

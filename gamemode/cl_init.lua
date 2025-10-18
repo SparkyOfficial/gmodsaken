@@ -198,3 +198,29 @@ hook.Add("InitPostEntity", "GModsaken_ClientInit", function()
         end
     end)
 end)
+
+-- Обработчик подсветки игроков в режиме LMS
+net.Receive("GModsaken_LMSHighlight", function()
+    local target = net.ReadEntity()
+    local color = net.ReadColor()
+    local duration = net.ReadFloat()
+    
+    if IsValid(target) then
+        -- Создаем эффект подсветки
+        hook.Add("PreDrawHalos", "GModsaken_LMSHalo_" .. target:EntIndex(), function()
+            if IsValid(target) and target:Alive() then
+                halo.Add({target}, color, 2, 2, 2, true, true)
+            else
+                hook.Remove("PreDrawHalos", "GModsaken_LMSHalo_" .. target:EntIndex())
+            end
+        end)
+        
+        -- Удаляем эффект через указанное время
+        timer.Simple(duration, function()
+            hook.Remove("PreDrawHalos", "GModsaken_LMSHalo_" .. target:EntIndex())
+        end)
+        
+        -- Уведомляем игрока
+        chat.AddText(Color(255, 255, 0), target:Nick() .. " подсвечен на " .. duration .. " секунд!")
+    end
+end)

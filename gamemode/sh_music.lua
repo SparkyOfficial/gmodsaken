@@ -42,6 +42,9 @@ GM.MusicTracks = {
         "gmodsaken/music/menu/menu_gentle_waves_freemusic.mp3",
         "gmodsaken/music/menu/menu_soft_electronics_pixabay.mp3",
         "gmodsaken/music/menu/menu_calm_meditation_unknown.mp3"
+    },
+    ["lms"] = {
+        "gmodsaken/music/EternalHopeEternalFight.mp3"
     }
 }
 

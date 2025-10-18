@@ -46,6 +46,7 @@ include("sh_content.lua")  -- Custom content loading
 include("sh_quests.lua")   -- Quest system
 include("sh_spawnmenu.lua") -- Spawn menu system
 include("sh_music.lua")    -- Music system
+include("progression/sh_progression.lua") -- Progression system
 include("core/sh_utils.lua")  -- Utility functions
 include("core/sh_ammo.lua")   -- Custom ammo system
 include("core/sh_tf_ammo.lua")   -- TF2 ammo system
@@ -62,6 +63,7 @@ if SERVER then
     include("sv_admin.lua")
     include("sv_quests.lua")  -- Quest system (server)
     include("sv_spawnmenu.lua") -- Spawn menu system (server)
+    include("progression/sv_progression.lua") -- Progression system (server)
 end
 
 -- Include client-side components
@@ -72,6 +74,7 @@ if CLIENT then
     include("cl_quests.lua")  -- Quest system (client)
     include("cl_spawnmenu.lua") -- Spawn menu system (client)
     include("cl_music.lua")   -- Music system (client)
+    include("progression/cl_progression.lua") -- Progression system (client)
 end
 
 -- Debug info

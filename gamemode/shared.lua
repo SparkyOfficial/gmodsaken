@@ -90,6 +90,8 @@ AddCSLuaFile("cl_hud.lua")
 AddCSLuaFile("cl_spawnmenu.lua")
 AddCSLuaFile("sh_content.lua")
 AddCSLuaFile("core/cl_hud_components.lua")  -- HUD components
+AddCSLuaFile("progression/sh_progression.lua")  -- Progression system
+AddCSLuaFile("progression/cl_progression.lua")  -- Progression system (client)
 
 -- Добавляем новые core файлы
 AddCSLuaFile("core/sh_utils.lua")
@@ -198,7 +200,49 @@ hook.Add("Initialize", "GModsakenLoadSettings", function()
 end)
 
 -- Подключаем shared файлы
-include("sh_spawnmenu.lua")
+
+-- Создаем сетевые сообщения
+util.AddNetworkString("GModsaken_UpdateGameState")
+util.AddNetworkString("GModsaken_OpenCharacterMenu")
+util.AddNetworkString("GModsaken_SelectCharacter")
+util.AddNetworkString("GModsaken_CharacterSelected")
+util.AddNetworkString("GModsaken_PlayMusic")
+util.AddNetworkString("GModsaken_StopMusic")
+util.AddNetworkString("GModsaken_UpdateMusicVolume")
+util.AddNetworkString("GModsaken_UpdateMusicEnabled")
+util.AddNetworkString("GModsaken_SwitchMusic")
+util.AddNetworkString("GModsaken_LMSHighlight")
+
+-- Функция для награждения XP за помощь товарищу
+function GM:AwardAssistXP(ply, assistType)
+    if CLIENT then return end  -- Только на сервере
+    
+    if not IsValid(ply) or not self:IsSurvivor(ply) then return end
+    
+    local xp = 0
+    
+    if assistType == "heal" then
+        xp = 15  -- Лечение товарища
+    elseif assistType == "repair" then
+        xp = 10  -- Ремонт турели/диспенсера
+    elseif assistType == "rescue" then
+        xp = 25  -- Спасение товарища из ловушки
+    end
+    
+    if xp > 0 and self.AddPlayerXP then
+        self:AddPlayerXP(ply, xp)
+        ply:ChatPrint("Получено " .. xp .. " XP за помощь товарищу!")
+    end
+end
+
+-- Консольная команда для открытия меню прогрессии
+concommand.Add("gmodsaken_progression", function(ply)
+    if CLIENT then
+        if GAMEMODE and GAMEMODE.CreateProgressionMenu then
+            GAMEMODE:CreateProgressionMenu()
+        end
+    end
+end)
 
 -- Инициализация гейммода
 hook.Add("Initialize", "GModsakenInit", function()

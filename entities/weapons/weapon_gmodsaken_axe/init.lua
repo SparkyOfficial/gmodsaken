@@ -9,7 +9,7 @@ include("shared.lua")
 
 SWEP.PrintName = "Топор Мясного"
 SWEP.Author = "GModsaken"
-SWEP.Instructions = "ЛКМ - Атака\nПКМ - Заражение (создает хедкрабов)\nR - Лазер из глаз"
+SWEP.Instructions = "ЛКМ - Атака\nПКМ - Заражение (создает хедкрабов)\nR - Лазер из глаз\nShift - Рывок"
 SWEP.Category = "GModsaken"
 
 SWEP.Spawnable = true
@@ -42,6 +42,7 @@ SWEP.UseHands = true
 -- Звуки
 SWEP.Primary.Sound = Sound("weapons/crowbar/crowbar_swing1.wav")
 SWEP.HitSound = Sound("weapons/crowbar/crowbar_hit1.wav")
+SWEP.LungeSound = Sound("npc/zombie/zombie_pain1.wav")
 
 -- Урон
 SWEP.Damage = 25
@@ -50,8 +51,12 @@ SWEP.Range = 100
 -- Способности
 SWEP.InfectionCooldown = 30 -- секунды
 SWEP.LaserCooldown = 15 -- секунды
+SWEP.LungeCooldown = 10 -- секунды
+SWEP.LungeDistance = 300 -- единицы
+SWEP.LungeDamage = 30 -- урон от рывка
 SWEP.LastInfection = 0
 SWEP.LastLaser = 0
+SWEP.LastLunge = 0
 
 function SWEP:Initialize()
     self:SetHoldType("melee")
@@ -65,7 +70,11 @@ end
 function SWEP:SetupDataTables()
     self:NetworkVar("Bool", 0, "InfectionReady")
     self:NetworkVar("Bool", 1, "LaserReady")
-    self:NetworkVar("Bool", 2, "IsAttacking")
+    self:NetworkVar("Bool", 2, "LungeReady")
+    self:NetworkVar("Bool", 3, "IsAttacking")
+    self:NetworkVar("Float", 0, "LastInfection")
+    self:NetworkVar("Float", 1, "LastLaser")
+    self:NetworkVar("Float", 2, "LastLunge")
 end
 
 -- Функция для установки правильной модели рук
@@ -353,6 +362,7 @@ function SWEP:SecondaryAttack()
     end
     
     self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay or 5.0))
+    self:SetLastInfection(CurTime())
 end
 
 function SWEP:Reload()
@@ -361,7 +371,7 @@ function SWEP:Reload()
     local owner = self:GetOwner()
     if not IsValid(owner) then return end
     
-    -- Лазер из глаз для убийцы
+    -- Лазер из глаз для убийца
     if owner:Team() == GAMEMODE.TEAM_KILLER then
         local tr = util.TraceLine({
             start = owner:GetShootPos(),
@@ -380,6 +390,86 @@ function SWEP:Reload()
         effectdata:SetOrigin(tr.HitPos)
         effectdata:SetStart(owner:GetShootPos())
         util.Effect("laser", effectdata)
+        
+        self:SetLastLaser(CurTime())
+    end
+end
+
+function SWEP:Lunge()
+    if not IsFirstTimePredicted() then return end
+    
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+    
+    -- Проверяем кулдаун
+    if CurTime() < self:GetNextSecondaryFire() + 5 then return end
+    
+    -- Проверяем, что владелец - убийца
+    if owner:Team() ~= GAMEMODE.TEAM_KILLER then
+        owner:ChatPrint("Только убийца может использовать рывок!")
+        return
+    end
+    
+    -- Звук рывка
+    if self.LungeSound then
+        owner:EmitSound(self.LungeSound)
+    end
+    
+    -- Вычисляем направление рывка
+    local forward = owner:GetAimVector()
+    forward.z = 0  -- Делаем рывок горизонтальным
+    forward:Normalize()
+    
+    -- Применяем силу рывка
+    local lungeVelocity = forward * 1000
+    lungeVelocity.z = 200  -- Немного вверх для лучшего контроля
+    
+    owner:SetVelocity(lungeVelocity)
+    
+    -- Проверяем попадание в игроков во время рывка
+    timer.Simple(0.3, function()
+        if IsValid(owner) then
+            local pos = owner:GetPos()
+            local radius = 100
+            
+            for _, ply in pairs(player.GetAll()) do
+                if IsValid(ply) and ply ~= owner and ply:Team() == GAMEMODE.TEAM_SURVIVOR and ply:Alive() then
+                    local distance = pos:Distance(ply:GetPos())
+                    if distance <= radius then
+                        -- Наносим урон от рывка
+                        ply:TakeDamage(self.LungeDamage, owner, self)
+                        ply:ChatPrint("Вас задел рывок убийцы! (" .. self.LungeDamage .. " урона)")
+                        
+                        -- Отбрасываем игрока
+                        local direction = (ply:GetPos() - pos):GetNormalized()
+                        ply:SetVelocity(direction * 300 + Vector(0, 0, 200))
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Устанавливаем кулдаун
+    self:SetNextSecondaryFire(CurTime() + (self.LungeCooldown or 10.0))
+    self:SetLastLunge(CurTime())
+    
+    owner:ChatPrint("Рывок использован!")
+end
+
+function SWEP:Think()
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+    
+    -- Проверяем нажатие клавиши Shift для рывка
+    if owner:KeyDown(IN_SPEED) and owner:OnGround() then
+        self:Lunge()
+    end
+    
+    -- Обновляем состояние готовности способностей
+    if SERVER then
+        self:SetInfectionReady(CurTime() > self:GetLastInfection() + self.InfectionCooldown)
+        self:SetLaserReady(CurTime() > self:GetLastLaser() + self.LaserCooldown)
+        self:SetLungeReady(CurTime() > self:GetLastLunge() + self.LungeCooldown)
     end
 end
 
@@ -390,20 +480,27 @@ function SWEP:DrawHUD()
     local screenW, screenH = ScrW(), ScrH()
     
     -- Информация о способностях
-    local infectionTime = self.InfectionCooldown - (CurTime() - self.LastInfection)
-    local laserTime = self.LaserCooldown - (CurTime() - self.LastLaser)
+    local infectionTime = math.max(0, self.InfectionCooldown - (CurTime() - self:GetLastInfection()))
+    local laserTime = math.max(0, self.LaserCooldown - (CurTime() - self:GetLastLaser()))
+    local lungeTime = math.max(0, self.LungeCooldown - (CurTime() - self:GetLastLunge()))
     
-    draw.SimpleText("Топор Мясного", "DermaDefault", 20, screenH - 100, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    draw.SimpleText("Топор Мясного", "DermaDefault", 20, screenH - 120, Color(255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     
     if infectionTime > 0 then
-        draw.SimpleText("Заражение: " .. math.ceil(infectionTime) .. "с", "DermaDefault", 20, screenH - 80, Color(255, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Заражение: " .. math.ceil(infectionTime) .. "с", "DermaDefault", 20, screenH - 100, Color(255, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     else
-        draw.SimpleText("Заражение готово (ПКМ)", "DermaDefault", 20, screenH - 80, Color(0, 255, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Заражение готово (ПКМ)", "DermaDefault", 20, screenH - 100, Color(0, 255, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     end
     
     if laserTime > 0 then
-        draw.SimpleText("Лазер: " .. math.ceil(laserTime) .. "с", "DermaDefault", 20, screenH - 60, Color(255, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Лазер: " .. math.ceil(laserTime) .. "с", "DermaDefault", 20, screenH - 80, Color(255, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     else
-        draw.SimpleText("Лазер готов (R)", "DermaDefault", 20, screenH - 60, Color(0, 255, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Лазер готов (R)", "DermaDefault", 20, screenH - 80, Color(0, 255, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     end
-end 
+    
+    if lungeTime > 0 then
+        draw.SimpleText("Рывок: " .. math.ceil(lungeTime) .. "с", "DermaDefault", 20, screenH - 60, Color(255, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    else
+        draw.SimpleText("Рывок готов (Shift)", "DermaDefault", 20, screenH - 60, Color(0, 255, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    end
+end

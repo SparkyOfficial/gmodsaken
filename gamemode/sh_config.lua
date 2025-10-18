@@ -27,7 +27,12 @@ GM.Config.Gameplay = {
     RoundTime = 600,          -- Время раунда в секундах
     LobbyTime = 30,           -- Время в лобби перед началом раунда
     EndTime = 10,             -- Время показа результатов в конце раунда
-    RespawnTime = 10          -- Время возрождения после смерти
+    RespawnTime = 10,         -- Время возрождения после смерти
+    LMS = {
+        Enabled = true,       -- Включить режим Last Man Standing
+        TimeLimit = 75,       -- Время в секундах (1 минута 15 секунд)
+        Music = "gmodsaken/music/EternalHopeEternalFight.mp3" -- Специальная музыка для LMS
+    }
 }
 
 -- Настройки персонажей

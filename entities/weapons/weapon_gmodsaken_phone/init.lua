@@ -162,10 +162,16 @@ function SWEP:ActivateAura(owner)
         
         owner:ChatPrint("Аура брони активирована на " .. self.AuraDuration .. " секунд!")
         
+        -- Награждаем XP за активацию ауры
+        if GAMEMODE and GAMEMODE.AwardAssistXP then
+            GAMEMODE:AwardAssistXP(owner, "repair")
+        end
+        
         -- Запускаем таймер ауры
         timer.Create("MayorAura_" .. owner:EntIndex(), 1, self.AuraDuration, function()
             if IsValid(owner) and self.AuraActive then
                 -- Лечим всех тиммейтов в радиусе
+                local healedPlayers = 0
                 for _, ply in pairs(player.GetAll()) do
                     if ply:Team() == GAMEMODE.TEAM_SURVIVOR and ply:GetPos():Distance(owner:GetPos()) <= self.AuraRadius then
                         -- Добавляем броню
@@ -178,6 +184,8 @@ function SWEP:ActivateAura(owner)
                         if currentHealth < maxHealth then
                             ply:SetHealth(math.min(currentHealth + 5, maxHealth))
                         end
+                        
+                        healedPlayers = healedPlayers + 1
                     end
                 end
                 

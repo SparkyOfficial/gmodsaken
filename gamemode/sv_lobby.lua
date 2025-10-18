@@ -14,6 +14,7 @@ util.AddNetworkString("GModsaken_BlindPlayer")
 util.AddNetworkString("GModsaken_ShowRadar")
 util.AddNetworkString("GModsaken_PlayChaseMusic")
 util.AddNetworkString("GModsaken_StopChaseMusic")
+util.AddNetworkString("GModsaken_LMSHighlight") -- Новое сетевое сообщение для LMS подсветки
 
 -- Game state variables (only set if not already set)
 if not GM.LobbyTime then
@@ -212,6 +213,29 @@ function GM:AssignRoles()
         return false
     end
     
+    -- Проверяем условия для режима Last Man Standing
+    local lmsEnabled = GM:GetConfig("Gameplay.LMS.Enabled", true)
+    if lmsEnabled and playerCount >= 2 then
+        -- Проверяем, есть ли только один выживший или условия для LMS
+        local survivorsCount = 0
+        local killerCount = 0
+        
+        for _, ply in pairs(players) do
+            if ply:Team() == GM.TEAM_SURVIVOR then
+                survivorsCount = survivorsCount + 1
+            elseif ply:Team() == GM.TEAM_KILLER then
+                killerCount = killerCount + 1
+            end
+        end
+        
+        -- Если остался только один выживший или только один убийца, активируем LMS
+        if (survivorsCount == 1 and killerCount >= 1) or (killerCount == 1 and survivorsCount == 1) then
+            print("GModsaken: Активация режима Last Man Standing")
+            return self:StartLMSRound()
+        end
+    end
+    
+    -- Стандартное назначение ролей
     -- Выбираем случайного убийцу
     local killerIndex = math.random(1, playerCount)
     local killer = players[killerIndex]
@@ -240,6 +264,84 @@ function GM:AssignRoles()
     end
     
     print("GModsaken: Роли назначены. Убийца: " .. killer:Nick())
+    return true
+end
+
+-- Специальное назначение ролей для режима Last Man Standing
+function GM:StartLMSRound()
+    local players = player.GetAll()
+    local playerCount = #players
+    
+    if playerCount < 2 then
+        return false
+    end
+    
+    print("GModsaken: Начало раунда Last Man Standing для " .. playerCount .. " игроков")
+    
+    -- Принудительно отключаем GodMode у всех игроков
+    for _, ply in pairs(players) do
+        if IsValid(ply) and ply:HasGodMode() then
+            ply:GodDisable()
+            print("GModsaken: Отключен GodMode у " .. ply:Nick() .. " перед назначением роли LMS")
+        end
+    end
+    
+    -- Находим текущих игроков
+    local killer = nil
+    local survivor = nil
+    
+    -- Сначала ищем существующих игроков
+    for _, ply in pairs(players) do
+        if ply:Team() == GM.TEAM_KILLER then
+            killer = ply
+        elseif ply:Team() == GM.TEAM_SURVIVOR then
+            survivor = ply
+        end
+    end
+    
+    -- Если не нашли, назначаем случайно
+    if not killer or not survivor then
+        local roles = {}
+        for i, ply in pairs(players) do
+            roles[i] = ply
+        end
+        
+        -- Назначаем случайно
+        local killerIndex = math.random(1, #roles)
+        killer = roles[killerIndex]
+        table.remove(roles, killerIndex)
+        
+        local survivorIndex = math.random(1, #roles)
+        survivor = roles[survivorIndex]
+    end
+    
+    -- Настраиваем убийцу
+    if killer then
+        print("GModsaken: " .. killer:Nick() .. " остается убийцей в режиме LMS")
+        killer:SetTeam(GM.TEAM_KILLER)
+        self:SetupKillerPlayer(killer)
+    end
+    
+    -- Настраиваем выжившего
+    if survivor then
+        print("GModsaken: " .. survivor:Nick() .. " остается выжившим в режиме LMS")
+        survivor:SetTeam(GM.TEAM_SURVIVOR)
+        self:SetupSurvivorPlayer(survivor)
+    end
+    
+    -- Устанавливаем состояние игры
+    GM.GameState = "LMS_PREPARE"
+    roundTimer = GM:GetConfig("Gameplay.LMS.TimeLimit", 75) -- 1 минута 15 секунд
+    gameStartTime = CurTime()
+    
+    print("GModsaken: Режим LMS активирован. Убийца: " .. (killer and killer:Nick() or "неизвестно") .. ", Выживший: " .. (survivor and survivor:Nick() or "неизвестно"))
+    
+    -- Вызываем хук для начала LMS
+    hook.Call("GModsaken_LMSStarted", GAMEMODE, killer, survivor)
+    
+    -- Уведомляем всех игроков
+    self:BroadcastGameState()
+    
     return true
 end
 
@@ -411,6 +513,11 @@ end
 
 -- Начало раунда
 function GM:StartRound()
+    -- Проверяем, не является ли это LMS подготовкой
+    if GM.GameState == "LMS_PREPARE" then
+        return self:StartLMSPhase()
+    end
+    
     if not self:AssignRoles() then
         print("GModsaken: Не удалось назначить роли, раунд не начался")
         return false
@@ -458,6 +565,98 @@ function GM:StartRound()
     return true
 end
 
+-- Начало фазы LMS
+function GM:StartLMSPhase()
+    GM.GameState = "LMS_PLAYING"
+    roundTimer = GM:GetConfig("Gameplay.LMS.TimeLimit", 75) -- 1 минута 15 секунд
+    gameStartTime = CurTime()
+    
+    print("GModsaken: Фаза LMS началась! Время: " .. roundTimer .. " сек")
+    
+    -- Воспроизводим специальную музыку LMS
+    local lmsMusic = GM:GetConfig("Gameplay.LMS.Music", "gmodsaken/music/EternalHopeEternalFight.mp3")
+    for _, ply in pairs(player.GetAll()) do
+        net.Start("GModsaken_PlayMusic")
+        net.WriteString(lmsMusic)
+        net.WriteBool(true) -- fadeIn
+        net.Send(ply)
+    end
+    
+    -- Подсвечиваем игроков друг другу
+    self:HighlightLMSPlayers()
+    
+    -- Выдаем оружие
+    for _, ply in pairs(player.GetAll()) do
+        if ply.SelectedCharacter and self.GiveCharacterWeapon then
+            print("GModsaken: Выдаем оружие персонажа " .. ply.SelectedCharacter .. " игроку " .. ply:Nick() .. " в LMS")
+            self:GiveCharacterWeapon(ply, ply.SelectedCharacter)
+        else
+            -- Если не выбрал персонажа, даем лом по умолчанию
+            print("GModsaken: Выдаем лом по умолчанию игроку " .. ply:Nick() .. " в LMS")
+            ply:Give("weapon_gmodsaken_crowbar")
+            ply:SelectWeapon("weapon_gmodsaken_crowbar")
+        end
+        
+        -- Даем грави пушку для манипуляций с объектами
+        ply:Give("weapon_physcannon")
+    end
+    
+    -- Инициализируем квесты
+    if self.InitializeQuests then
+        timer.Simple(2, function() -- Небольшая задержка для стабилизации
+            self:InitializeQuests()
+        end)
+    end
+    
+    -- Вызываем хук для начала LMS
+    hook.Call("GModsaken_LMSGameStarted", GAMEMODE)
+    
+    -- Уведомляем всех игроков
+    for _, ply in pairs(player.GetAll()) do
+        ply:ChatPrint("=== LAST MAN STANDING ===")
+        ply:ChatPrint("Выживший сражается один на один с убийцей!")
+        ply:ChatPrint("Время: " .. roundTimer .. " секунд")
+    end
+    
+    self:BroadcastGameState()
+    
+    print("GModsaken: Фаза LMS началась!")
+    return true
+end
+
+-- Подсветка игроков в режиме LMS
+function GM:HighlightLMSPlayers()
+    local survivors = self:GetTeamPlayers(GM.TEAM_SURVIVOR)
+    local killers = self:GetTeamPlayers(GM.TEAM_KILLER)
+    
+    -- Подсвечиваем выжившего оранжевым
+    for _, survivor in pairs(survivors) do
+        if IsValid(survivor) and survivor:Alive() then
+            net.Start("GModsaken_LMSHighlight")
+            net.WriteEntity(survivor)
+            net.WriteColor(Color(255, 165, 0)) -- Оранжевый цвет
+            net.WriteFloat(5.0) -- 5 секунд
+            net.Broadcast()
+        end
+    end
+    
+    -- Подсвечиваем убийцу красным
+    for _, killer in pairs(killers) do
+        if IsValid(killer) and killer:Alive() then
+            net.Start("GModsaken_LMSHighlight")
+            net.WriteEntity(killer)
+            net.WriteColor(Color(255, 0, 0)) -- Красный цвет
+            net.WriteFloat(5.0) -- 5 секунд
+            net.Broadcast()
+        end
+    end
+    
+    -- Уведомляем игроков
+    for _, ply in pairs(player.GetAll()) do
+        ply:ChatPrint("Игроки подсвечены на 5 секунд!")
+    end
+end
+
 -- Окончание раунда
 function GM:EndRound(winner)
     -- Проверяем, не завершен ли уже раунд
@@ -470,12 +669,23 @@ function GM:EndRound(winner)
     endTimer = GM.EndTime
     
     local winnerText = "Ничья"
+    local isKillerWin = false
     if winner == "KILLER" then
         winnerText = "Победа УБИЙЦЫ!"
+        isKillerWin = true
     elseif winner == "SURVIVORS" then
         winnerText = "Победа ВЫЖИВШИХ!"
     elseif winner == "TIMEOUT" then
         winnerText = "Время истекло! Победа ВЫЖИВШИХ!"
+    end
+    
+    -- Награждаем XP за победу в раунде
+    for _, ply in pairs(player.GetAll()) do
+        if IsValid(ply) then
+            if GM.AwardWinXP then
+                GM:AwardWinXP(ply, isKillerWin)
+            end
+        end
     end
     
     -- Уведомляем всех игроков
@@ -545,7 +755,7 @@ end
 
 -- Проверка условий победы
 function GM:CheckWinConditions()
-    if GM.GameState ~= "PLAYING" then 
+    if GM.GameState ~= "PLAYING" and GM.GameState ~= "LMS_PLAYING" then 
         return 
     end
     
@@ -581,8 +791,8 @@ function GM:CheckWinConditions()
     
     print("GModsaken Debug: aliveSurvivors=" .. aliveSurvivors .. ", aliveKillers=" .. aliveKillers .. ", roundTimer=" .. roundTimer)
     
-    -- Дополнительная проверка: раунд должен длиться минимум 30 секунд
-    if CurTime() - (gameStartTime or 0) < 30 then
+    -- Дополнительная проверка: раунд должен длиться минимум 30 секунд (кроме LMS)
+    if GM.GameState ~= "LMS_PLAYING" and CurTime() - (gameStartTime or 0) < 30 then
         return
     end
     
@@ -663,9 +873,9 @@ function GM:BroadcastGameState()
         net.Start("GModsaken_UpdateGameState")
         net.WriteString(GM.GameState)
         
-        if GM.GameState == "PREPARING" then
+        if GM.GameState == "PREPARING" or GM.GameState == "LMS_PREPARE" then
             net.WriteInt(lobbyTimer, 32)
-        elseif GM.GameState == "PLAYING" then
+        elseif GM.GameState == "PLAYING" or GM.GameState == "LMS_PLAYING" then
             net.WriteInt(roundTimer, 32)
         elseif GM.GameState == "ENDING" then
             net.WriteInt(endTimer, 32)
@@ -776,8 +986,31 @@ local function GameTimer()
             end
         end
         
-    elseif gm.GameState == "PLAYING" then
+    elseif gm.GameState == "LMS_PREPARE" then
+        -- Подготовка к LMS - короткий таймер перед началом
+        lobbyTimer = lobbyTimer - 1
+        
+        if lobbyTimer <= 0 then
+            gm:StartRound() -- Это вызовет StartLMSPhase
+        else
+            -- Обновляем состояние каждую секунду
+            gm:BroadcastGameState()
+        end
+        
+    elseif gm.GameState == "LMS_PLAYING" or gm.GameState == "PLAYING" then
         roundTimer = roundTimer - 1
+        
+        -- Награждаем XP за выживание каждые 10 секунд (только для обычной игры)
+        if gm.GameState == "PLAYING" and roundTimer % 10 == 0 then
+            for _, ply in pairs(player.GetAll()) do
+                if IsValid(ply) and gm:IsSurvivor(ply) and ply:Alive() then
+                    if gm.AwardSurvivalXP then
+                        -- Награждаем 1 XP за каждые 10 секунд выживания
+                        gm:AwardSurvivalXP(ply, 10)
+                    end
+                end
+            end
+        end
         
         if roundTimer <= 0 then
             gm:EndRound("TIMEOUT")
@@ -785,8 +1018,8 @@ local function GameTimer()
             -- Проверяем условия победы каждую секунду
             gm:CheckWinConditions()
             
-            -- Проверяем музыку Мясного каждые 3 секунды (реже для оптимизации)
-            if roundTimer % 3 == 0 then
+            -- Проверяем музыку Мясного каждые 3 секунды (только для обычной игры)
+            if gm.GameState == "PLAYING" and roundTimer % 3 == 0 then
                 gm:CheckMyasnoiMusic()
             end
             
@@ -980,30 +1213,67 @@ concommand.Add("gmodsaken_debug_state", function(ply, cmd, args)
     ply:ChatPrint("TEAM_SURVIVOR: " .. tostring(GM.TEAM_SURVIVOR))
     ply:ChatPrint("TEAM_KILLER: " .. tostring(GM.TEAM_KILLER))
     
-    if GM.GameState == "PREPARING" then
+    if GM.GameState == "PREPARING" or GM.GameState == "LMS_PREPARE" then
         ply:ChatPrint("Lobby Timer: " .. tostring(lobbyTimer))
-    elseif GM.GameState == "PLAYING" then
+    elseif GM.GameState == "PLAYING" or GM.GameState == "LMS_PLAYING" then
         ply:ChatPrint("Round Timer: " .. tostring(roundTimer))
     elseif GM.GameState == "ENDING" then
         ply:ChatPrint("End Timer: " .. tostring(endTimer))
     end
-    
-    ply:ChatPrint("=== ИГРОКИ ===")
-    for _, player in pairs(player.GetAll()) do
-        if IsValid(player) then
-            local teamName = "Неизвестно"
-            if player:Team() == GM.TEAM_SURVIVOR then
-                teamName = "Выживший"
-            elseif player:Team() == GM.TEAM_KILLER then
-                teamName = "Убийца"
-            elseif player:Team() == GM.TEAM_SPECTATOR then
-                teamName = "Наблюдатель"
-            end
-            
-            ply:ChatPrint(player:Nick() .. " - " .. teamName .. " (Team ID: " .. player:Team() .. ")")
-        end
+end)
+
+-- Команда для принудительного запуска режима LMS
+concommand.Add("gmodsaken_force_lms", function(ply, cmd, args)
+    if IsValid(ply) and not ply:IsAdmin() then
+        ply:ChatPrint("Только администраторы могут принудительно запускать режим LMS!")
+        return
     end
-    ply:ChatPrint("========================")
+    
+    -- Проверяем, есть ли хотя бы 2 игрока
+    local players = player.GetAll()
+    if #players < 2 then
+        if IsValid(ply) then
+            ply:ChatPrint("Для режима LMS нужно как минимум 2 игрока!")
+        end
+        return
+    end
+    
+    -- Назначаем случайного убийцу и выжившего
+    local killer = players[1]
+    local survivor = players[2]
+    
+    -- Настраиваем убийцу
+    killer:SetTeam(GM.TEAM_KILLER)
+    GM:SetupKillerPlayer(killer)
+    
+    -- Настраиваем выжившего
+    survivor:SetTeam(GM.TEAM_SURVIVOR)
+    GM:SetupSurvivorPlayer(survivor)
+    
+    -- Остальных делаем наблюдателями
+    for i = 3, #players do
+        local otherPly = players[i]
+        otherPly:SetTeam(GM.TEAM_SPECTATOR)
+        GM:SetupSpectator(otherPly)
+    end
+    
+    -- Устанавливаем состояние LMS
+    GM.GameState = "LMS_PREPARE"
+    lobbyTimer = 5 -- 5 секунд подготовки
+    
+    -- Уведомляем всех
+    for _, player in pairs(players) do
+        player:ChatPrint("=== LAST MAN STANDING ===")
+        player:ChatPrint("Режим активирован! " .. killer:Nick() .. " (убийца) vs " .. survivor:Nick() .. " (выживший)")
+        player:ChatPrint("Начало через " .. lobbyTimer .. " секунд...")
+    end
+    
+    GM:BroadcastGameState()
+    
+    if IsValid(ply) then
+        ply:ChatPrint("Режим LMS принудительно запущен!")
+    end
+    print("GModsaken: Режим LMS принудительно запущен администратором")
 end)
 
 -- Команда для отладки ролей
