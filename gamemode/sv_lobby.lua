@@ -839,7 +839,8 @@ function GM:CheckMyasnoiMusic()
         return
     end
     
-    local chaseDistance = 300 -- Дистанция для воспроизведения музыки
+    -- Получаем дистанцию из конфига
+    local chaseDistance = self:GetConfig("Gameplay.ChaseDistance", 300)
     local playersNearMyasnoi = {}
     
     -- Проверяем только выживших на близость к Мясному
@@ -887,61 +888,169 @@ function GM:BroadcastGameState()
     end
 end
 
--- Логика турелей и раздатчиков
-hook.Add("Think", "GModsaken_TurretDispenserLogic", function()
-    -- Обрабатываем турели
-    for _, ent in pairs(ents.FindByClass("npc_turret_floor")) do
-        if IsValid(ent) and ent.IsGModsakenTurret then
-            -- Логика турели
-            if CurTime() - (ent.LastDamageTime or 0) >= 1.0 then -- Каждую секунду
-                local killers = {}
-                for _, ply in pairs(player.GetAll()) do
-                    if IsValid(ply) and ply:Team() == GAMEMODE.TEAM_KILLER and ply:Alive() then
-                        local distance = ent:GetPos():Distance(ply:GetPos())
-                        if distance <= 500 then
-                            table.insert(killers, ply)
-                        end
-                    end
-                end
+-- Логика турелей и раздатчиков теперь в sv_optimization.lua
+
+-- Получение точки спавна лобби
+function GM:GetLobbySpawnPoint()
+    if not self.LobbySpawns or #self.LobbySpawns == 0 then
+        print("[GModsaken] WARNING: No lobby spawn points defined!")
+        return Vector(0, 0, 0)
+    end
+    
+    return self.LobbySpawns[math.random(1, #self.LobbySpawns)]
+end
+
+-- Получение точки спавна для команды
+function GM:GetTeamSpawnPoint(teamID)
+    if teamID == self.TEAM_KILLER then
+        return self.KillerSpawn or Vector(0, 0, 0)
+    elseif teamID == self.TEAM_SURVIVOR then
+        if not self.SurvivorSpawns or #self.SurvivorSpawns == 0 then
+            print("[GModsaken] WARNING: No survivor spawn points defined!")
+            return Vector(0, 0, 0)
+        end
+        return self.SurvivorSpawns[math.random(1, #self.SurvivorSpawns)]
+    else
+        return self:GetLobbySpawnPoint()
+    end
+end
+
+-- Получение всех игроков в команде
+function GM:GetTeamPlayers(teamID)
+    local teamPlayers = {}
+    
+    for _, ply in pairs(player.GetAll()) do
+        if IsValid(ply) and ply:Team() == teamID then
+            table.insert(teamPlayers, ply)
+        end
+    end
+    
+    return teamPlayers
+end
+
+-- Выдача оружия персонажа
+function GM:GiveCharacterWeapon(ply, characterName)
+    if not IsValid(ply) then return false end
+    
+    local character = self:GetCharacter(characterName)
+    if not character then
+        print("[GModsaken] WARNING: Character not found: " .. tostring(characterName))
+        return false
+    end
+    
+    -- Проверяем команду игрока
+    if self:IsKiller(ply) then
+        -- Убийца всегда получает топор
+        ply:Give("weapon_gmodsaken_axe")
+        ply:SelectWeapon("weapon_gmodsaken_axe")
+        print("[GModsaken] Gave axe to killer " .. ply:Nick())
+        return true
+    else
+        -- Выжившие получают оружие в зависимости от персонажа
+        if characterName == "gordon" then
+            ply:Give("weapon_gmodsaken_crowbar")
+            ply:SelectWeapon("weapon_gmodsaken_crowbar")
+        elseif characterName == "rebel" then
+            ply:Give("weapon_gmodsaken_pistol")
+            ply:SelectWeapon("weapon_gmodsaken_pistol")
+        elseif characterName == "medic" then
+            ply:Give("weapon_gmodsaken_medkit")
+            ply:SelectWeapon("weapon_gmodsaken_medkit")
+        elseif characterName == "engineer" then
+            ply:Give("weapon_gmodsaken_pda")
+            ply:SelectWeapon("weapon_gmodsaken_pda")
+        elseif characterName == "guard" then
+            ply:Give("weapon_gmodsaken_baton")
+            ply:SelectWeapon("weapon_gmodsaken_baton")
+        elseif characterName == "mayor" then
+            ply:Give("weapon_gmodsaken_phone")
+            ply:SelectWeapon("weapon_gmodsaken_phone")
+        else
+            -- По умолчанию даем лом
+            ply:Give("weapon_gmodsaken_crowbar")
+            ply:SelectWeapon("weapon_gmodsaken_crowbar")
+        end
+        
+        print("[GModsaken] Gave weapon to survivor " .. ply:Nick() .. " (character: " .. characterName .. ")")
+        return true
+    end
+end
+
+-- Инициализация квестов
+function GM:InitializeQuests()
+    if not self.QuestSystem then
+        print("[GModsaken] WARNING: Quest system not initialized!")
+        return false
+    end
+    
+    print("[GModsaken] Initializing quests...")
+    
+    -- Спавним предметы для квеста "Мусор"
+    local trashQuest = self.QuestSystem.TrashQuest
+    if trashQuest and trashQuest.models then
+        for i = 1, trashQuest.requiredItems do
+            local model = trashQuest.models[math.random(1, #trashQuest.models)]
+            local spawnPoints = ents.FindByClass("info_player_start")
+            
+            if #spawnPoints > 0 then
+                local spawnPoint = spawnPoints[math.random(1, #spawnPoints)]
+                local pos = spawnPoint:GetPos() + Vector(math.random(-200, 200), math.random(-200, 200), 50)
                 
-                if #killers > 0 then
-                    local target = killers[1]
-                    target:TakeDamage(10, ent, ent)
-                    
-                    -- Замедление
-                    if GAMEMODE.SlowPlayer then
-                        GAMEMODE:SlowPlayer(target, 3.0, 0.8)
-                    end
-                    
-                    ent:EmitSound("weapons/turret/turret_fire1.wav")
-                    ent.LastDamageTime = CurTime()
+                local ent = ents.Create("prop_physics")
+                if IsValid(ent) then
+                    ent:SetModel(model)
+                    ent:SetPos(pos)
+                    ent:Spawn()
+                    ent.IsQuestItem = true
+                    ent.QuestType = "trash"
+                    print("[GModsaken] Spawned trash quest item: " .. model)
                 end
             end
         end
     end
     
-    -- Обрабатываем раздатчики
-    for _, ent in pairs(ents.FindByClass("npc_turret_ceiling")) do
-        if IsValid(ent) and ent.IsGModsakenDispenser then
-            -- Логика раздатчика
-            if CurTime() - (ent.LastHealTime or 0) >= 2.0 then -- Каждые 2 секунды
-                for _, ply in pairs(player.GetAll()) do
-                    if IsValid(ply) and ply:Team() == GAMEMODE.TEAM_SURVIVOR and ply:Alive() then
-                        local distance = ent:GetPos():Distance(ply:GetPos())
-                        if distance <= 200 then
-                            -- Медленное восстановление здоровья
-                            if ply:Health() < ply:GetMaxHealth() then
-                                ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + 5))
-                            end
-                            
-                            -- Медленное восстановление брони
-                            if ply:Armor() < 100 then
-                                ply:SetArmor(math.min(100, ply:Armor() + 2))
-                            end
-                        end
-                    end
+    -- Спавним предметы для квеста "Интерфейсы"
+    local interfacesQuest = self.QuestSystem.InterfacesQuest
+    if interfacesQuest and interfacesQuest.models then
+        for i = 1, interfacesQuest.requiredItems do
+            local model = interfacesQuest.models[math.random(1, #interfacesQuest.models)]
+            local spawnPoints = ents.FindByClass("info_player_start")
+            
+            if #spawnPoints > 0 then
+                local spawnPoint = spawnPoints[math.random(1, #spawnPoints)]
+                local pos = spawnPoint:GetPos() + Vector(math.random(-200, 200), math.random(-200, 200), 50)
+                
+                local ent = ents.Create("prop_physics")
+                if IsValid(ent) then
+                    ent:SetModel(model)
+                    ent:SetPos(pos)
+                    ent:Spawn()
+                    ent.IsQuestItem = true
+                    ent.QuestType = "interfaces"
+                    print("[GModsaken] Spawned interfaces quest item: " .. model)
                 end
-                ent.LastHealTime = CurTime()
+            end
+        end
+    end
+    
+    print("[GModsaken] Quests initialized successfully")
+    return true
+end
+
+-- Очистка квестов
+function GM:CleanupQuests()
+    print("[GModsaken] Cleaning up quest items...")
+    
+    for _, ent in pairs(ents.GetAll()) do
+        if IsValid(ent) and ent.IsQuestItem then
+            ent:Remove()
+        end
+    end
+    
+    print("[GModsaken] Quest items cleaned up")
+end
+
+print("[GModsaken] sv_lobby.lua loaded successfully")e = CurTime()
             end
         end
     end

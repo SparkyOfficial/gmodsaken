@@ -28,6 +28,12 @@ GM.Config.Gameplay = {
     LobbyTime = 30,           -- Время в лобби перед началом раунда
     EndTime = 10,             -- Время показа результатов в конце раунда
     RespawnTime = 10,         -- Время возрождения после смерти
+    ChaseDistance = 300,      -- Дистанция для воспроизведения музыки преследования
+    TurretRange = 500,        -- Дальность атаки турели
+    TurretDamage = 10,        -- Урон турели
+    DispenserHealRate = 5,    -- Скорость лечения раздатчика (HP за тик)
+    DispenserHealInterval = 2.0, -- Интервал лечения раздатчика (секунды)
+    DispenserRange = 200,     -- Радиус действия раздатчика
     LMS = {
         Enabled = true,       -- Включить режим Last Man Standing
         TimeLimit = 75,       -- Время в секундах (1 минута 15 секунд)
@@ -102,6 +108,18 @@ function GM:SaveConfig()
     file.CreateDir("gmodsaken")
     file.Write("gmodsaken/config.txt", util.TableToJSON(self.Config, true))
 end
+
+-- Настройки Web API
+GM.Config.API = {
+    Enabled = true,                                    -- Включить интеграцию с Web API
+    BaseURL = "http://localhost:3000/api",            -- Базовый URL API сервера
+    APIKey = "your-api-key-here",                     -- API ключ для аутентификации
+    Timeout = 5,                                       -- Таймаут запроса (секунды)
+    RetryAttempts = 3,                                 -- Количество попыток при ошибке
+    RetryDelay = 2,                                    -- Задержка между попытками (секунды)
+    QueueOfflineRequests = true,                       -- Сохранять запросы при недоступности API
+    MaxQueueSize = 100                                 -- Максимальный размер очереди запросов
+}
 
 -- Загружаем конфигурацию при инициализации
 hook.Add("Initialize", "GModsaken_LoadConfig", function()

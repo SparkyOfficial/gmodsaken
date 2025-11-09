@@ -63,6 +63,7 @@ if SERVER then
     include("sv_admin.lua")
     include("sv_quests.lua")  -- Quest system (server)
     include("sv_spawnmenu.lua") -- Spawn menu system (server)
+    include("sv_optimization.lua") -- Performance optimization
     include("progression/sv_progression.lua") -- Progression system (server)
 end
 
