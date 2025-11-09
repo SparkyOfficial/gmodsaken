@@ -5,6 +5,7 @@ const express = require("express");
 const session = require("express-session");
 const MongoStore = require('connect-mongo');
 const basicRoutes = require("./routes/index");
+const authRoutes = require("./routes/auth");
 const { connectDB } = require("./config/database");
 const cors = require("cors");
 
@@ -20,20 +21,47 @@ app.enable('json spaces');
 // We want to be consistent with URL paths, so we enable strict routing
 app.enable('strict routing');
 
-app.use(cors({}));
+// CORS configuration
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 connectDB();
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.DATABASE_URL,
+    ttl: 7 * 24 * 60 * 60, // 7 days
+    touchAfter: 24 * 3600 // Lazy session update (24 hours)
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  },
+  name: 'gmodsaken.sid' // Custom session cookie name
+}));
+
 app.on("error", (error) => {
   console.error(`Server error: ${error.message}`);
   console.error(error.stack);
 });
 
-// Basic Routes
+// Routes
 app.use(basicRoutes);
+app.use('/auth', authRoutes);
 
 // If no routes handled the request, it's a 404
 app.use((req, res, next) => {
