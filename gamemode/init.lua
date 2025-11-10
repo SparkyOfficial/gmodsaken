@@ -62,6 +62,7 @@ if SERVER then
     include("sv_lobby.lua")
     include("sv_characters.lua")
     include("sv_admin.lua")
+    include("sv_bots.lua")  -- Bot system for testing
     include("sv_quests.lua")  -- Quest system (server)
     include("sv_spawnmenu.lua") -- Spawn menu system (server)
     include("sv_optimization.lua") -- Performance optimization

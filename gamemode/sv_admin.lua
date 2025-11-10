@@ -152,7 +152,7 @@ local function SetRoundTime(ply, cmd, args)
     print(string.format("[GModsaken] Round time set to %d seconds by %s", time, IsValid(ply) and ply:Nick() or "CONSOLE"))
 end
 
--- Add bot
+-- Add bot (redirects to bot system)
 local function AddBot(ply, cmd, args)
     if not IsAdmin(ply) then 
         if IsValid(ply) then
@@ -161,22 +161,31 @@ local function AddBot(ply, cmd, args)
         return 
     end
     
-    -- В Garry's Mod нет встроенной поддержки ботов
-    -- Рекомендуем использовать аддон "Player Bots" из Workshop
-    -- https://steamcommunity.com/sharedfiles/filedetails/?id=2848862522
-    
-    if IsValid(ply) then
-        ply:ChatPrint("[ИНФОРМАЦИЯ] Для добавления ботов используйте:")
-        ply:ChatPrint("1. Установите аддон 'Player Bots' из Workshop")
-        ply:ChatPrint("2. Или используйте команду 'bot' в консоли сервера")
-        ply:ChatPrint("3. Или пригласите друзей для тестирования")
+    -- Используем систему тестовых ботов
+    if GM and GM.CreateTestBot then
+        local bot = GM:CreateTestBot()
+        if IsValid(bot) then
+            if IsValid(ply) then
+                ply:ChatPrint("[АДМИН] Тестовый бот добавлен: " .. (bot.BotName or "Бот"))
+            end
+            
+            -- Уведомляем всех игроков
+            for _, p in ipairs(player.GetAll()) do
+                p:ChatPrint("[СИСТЕМА] Добавлен тестовый бот для отладки")
+            end
+        else
+            if IsValid(ply) then
+                ply:ChatPrint("[ОШИБКА] Не удалось создать тестового бота!")
+            end
+        end
+    else
+        if IsValid(ply) then
+            ply:ChatPrint("[ОШИБКА] Система ботов не загружена!")
+        end
     end
-    
-    print("[GModsaken] Bot command called - Garry's Mod doesn't have native bot support")
-    print("[GModsaken] Recommend using 'Player Bots' addon from Workshop")
 end
 
--- Remove all bots
+-- Remove all bots (redirects to bot system)
 local function RemoveBots(ply, cmd, args)
     if not IsAdmin(ply) then 
         if IsValid(ply) then
@@ -185,19 +194,25 @@ local function RemoveBots(ply, cmd, args)
         return 
     end
     
-    local count = 0
-    for _, bot in ipairs(player.GetBots()) do
-        if IsValid(bot) then
-            bot:Kick("Удален администратором")
-            count = count + 1
+    -- Используем систему тестовых ботов
+    if GM and GM.RemoveAllTestBots then
+        local count = GM:RemoveAllTestBots()
+        
+        if IsValid(ply) then
+            ply:ChatPrint("[АДМИН] Удалено тестовых ботов: " .. count)
+        end
+        
+        -- Уведомляем всех игроков
+        for _, p in ipairs(player.GetAll()) do
+            p:ChatPrint("[СИСТЕМА] Все тестовые боты удалены")
+        end
+        
+        print(string.format("[GModsaken] %d test bots removed by %s", count, IsValid(ply) and ply:Nick() or "CONSOLE"))
+    else
+        if IsValid(ply) then
+            ply:ChatPrint("[ОШИБКА] Система ботов не загружена!")
         end
     end
-    
-    if IsValid(ply) then
-        ply:ChatPrint("[АДМИН] Удалено ботов: " .. count)
-    end
-    
-    print(string.format("[GModsaken] %d bots removed by %s", count, IsValid(ply) and ply:Nick() or "CONSOLE"))
 end
 
 -- Register console commands
