@@ -27,7 +27,7 @@ if not GM.EndTime then
     GM.EndTime = 10  -- Default end time
 end
 if not GM.MinPlayers then
-    GM.MinPlayers = 2  -- Default minimum players
+    GM.MinPlayers = 1  -- Default minimum players (изменено с 2 на 1 для тестирования)
 end
 GM.GameState = GM.GameState or "LOBBY"
 
@@ -174,7 +174,7 @@ function GM:CheckGameStart()
     end
     
     local playerCount = #player.GetAll()
-    local minPlayers = gm.MinPlayers or 2  -- Default to 2 players if not set
+    local minPlayers = gm.MinPlayers or 1  -- Default to 1 player for testing
     
     if playerCount >= minPlayers then
         if gm.GameState == "LOBBY" then
@@ -209,7 +209,7 @@ function GM:AssignRoles()
     local players = player.GetAll()
     local playerCount = #players
     
-    if playerCount < GM.MinPlayers then
+    if playerCount < 1 then
         return false
     end
     
@@ -236,10 +236,6 @@ function GM:AssignRoles()
     end
     
     -- Стандартное назначение ролей
-    -- Выбираем случайного убийцу
-    local killerIndex = math.random(1, playerCount)
-    local killer = players[killerIndex]
-    
     print("GModsaken: Назначаем роли для " .. playerCount .. " игроков")
     
     -- Принудительно отключаем GodMode у всех игроков перед назначением ролей
@@ -249,6 +245,20 @@ function GM:AssignRoles()
             print("GModsaken: Отключен GodMode у " .. ply:Nick() .. " перед назначением роли")
         end
     end
+    
+    -- Если только 1 игрок - делаем его выжившим для тестирования
+    if playerCount == 1 then
+        local ply = players[1]
+        print("GModsaken: " .. ply:Nick() .. " становится выжившим (режим тестирования)")
+        ply:SetTeam(GM.TEAM_SURVIVOR)
+        self:SetupSurvivorPlayer(ply)
+        print("GModsaken: Роли назначены. Режим тестирования (1 игрок)")
+        return true
+    end
+    
+    -- Выбираем случайного убийцу
+    local killerIndex = math.random(1, playerCount)
+    local killer = players[killerIndex]
     
     -- Назначаем роли
     for i, ply in pairs(players) do

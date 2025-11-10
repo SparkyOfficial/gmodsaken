@@ -17,6 +17,38 @@ _G.GAMEMODE = GM
 -- Таблица для хранения ботов
 GM.TestBots = GM.TestBots or {}
 
+-- Функция для получения всех игроков + ботов
+function GM:GetAllPlayersAndBots()
+    local all = {}
+    
+    -- Добавляем реальных игроков
+    for _, ply in ipairs(player.GetAll()) do
+        table.insert(all, ply)
+    end
+    
+    -- Добавляем ботов
+    for _, bot in ipairs(self.TestBots) do
+        if IsValid(bot) then
+            table.insert(all, bot)
+        end
+    end
+    
+    return all
+end
+
+-- Функция для получения количества игроков + ботов
+function GM:GetPlayerAndBotCount()
+    local count = #player.GetAll()
+    
+    for _, bot in ipairs(self.TestBots) do
+        if IsValid(bot) then
+            count = count + 1
+        end
+    end
+    
+    return count
+end
+
 -- Имена для ботов
 local botNames = {
     "Тестовый Бот",
