@@ -152,10 +152,62 @@ local function SetRoundTime(ply, cmd, args)
     print(string.format("[GModsaken] Round time set to %d seconds by %s", time, IsValid(ply) and ply:Nick() or "CONSOLE"))
 end
 
+-- Add bot
+local function AddBot(ply, cmd, args)
+    if not IsAdmin(ply) then 
+        if IsValid(ply) then
+            ply:ChatPrint("[ОШИБКА] У вас нет прав для использования этой команды!")
+        end
+        return 
+    end
+    
+    local bot = player.CreateNextBot("Bot " .. math.random(1, 999))
+    if not IsValid(bot) then
+        if IsValid(ply) then
+            ply:ChatPrint("[ОШИБКА] Не удалось создать бота!")
+        end
+        return
+    end
+    
+    -- Notify
+    if IsValid(ply) then
+        ply:ChatPrint("[АДМИН] Бот добавлен: " .. bot:Nick())
+    end
+    
+    print(string.format("[GModsaken] Bot added by %s", IsValid(ply) and ply:Nick() or "CONSOLE"))
+end
+
+-- Remove all bots
+local function RemoveBots(ply, cmd, args)
+    if not IsAdmin(ply) then 
+        if IsValid(ply) then
+            ply:ChatPrint("[ОШИБКА] У вас нет прав для использования этой команды!")
+        end
+        return 
+    end
+    
+    local count = 0
+    for _, bot in ipairs(player.GetBots()) do
+        if IsValid(bot) then
+            bot:Kick("Удален администратором")
+            count = count + 1
+        end
+    end
+    
+    if IsValid(ply) then
+        ply:ChatPrint("[АДМИН] Удалено ботов: " .. count)
+    end
+    
+    print(string.format("[GModsaken] %d bots removed by %s", count, IsValid(ply) and ply:Nick() or "CONSOLE"))
+end
+
 -- Register console commands
 concommand.Add("sm_forcestart", ForceStartRound, nil, "Принудительно начать раунд")
 concommand.Add("sm_forceend", ForceEndRound, nil, "Принудительно завершить раунд")
 concommand.Add("sm_settime", SetRoundTime, nil, "Установить время раунда в секундах (60-1800)")
+concommand.Add("bot", AddBot, nil, "Добавить бота для тестирования")
+concommand.Add("gmodsaken_addbot", AddBot, nil, "Добавить бота для тестирования")
+concommand.Add("gmodsaken_removebot", RemoveBots, nil, "Удалить всех ботов")
 
 -- Add chat commands
 hook.Add("PlayerSay", "GModsaken_AdminChatCommands", function(ply, text)
@@ -168,6 +220,12 @@ hook.Add("PlayerSay", "GModsaken_AdminChatCommands", function(ply, text)
     elseif text:lower():StartWith("!settime ") then
         local args = string.Explode(" ", text)
         SetRoundTime(ply, nil, {args[2]})
+        return ""
+    elseif text:lower() == "!bot" or text:lower() == "!addbot" then
+        AddBot(ply)
+        return ""
+    elseif text:lower() == "!removebot" or text:lower() == "!removebots" then
+        RemoveBots(ply)
         return ""
     end
 end)

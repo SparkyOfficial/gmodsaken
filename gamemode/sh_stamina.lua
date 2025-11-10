@@ -18,8 +18,8 @@ GM.StaminaSystem = {
     MaxStamina = GM:GetConfig("Characters.Survivor.Stamina", 100),
     KillerMaxStamina = GM:GetConfig("Characters.Killer.Stamina", 225),
     StaminaDrainRate = GM:GetConfig("Gameplay.Stamina.DrainRate", 0.5),
-    StaminaRegenRate = GM:GetConfig("Gameplay.Stamina.RegenRate", 0.3),
-    SprintStaminaCost = GM:GetConfig("Gameplay.Stamina.SprintCost", 0.8),
+    StaminaRegenRate = GM:GetConfig("Gameplay.Stamina.RegenRate", 1.2), -- Увеличено с 0.3 до 1.2 для быстрого восстановления
+    SprintStaminaCost = GM:GetConfig("Gameplay.Stamina.SprintCost", 11.11), -- Изменено с 0.8 на 11.11 (100/9 секунд)
     JumpStaminaCost = GM:GetConfig("Gameplay.Stamina.JumpCost", 5),
     AttackStaminaCost = GM:GetConfig("Gameplay.Stamina.AttackCost", 3),
     MinStaminaForSprint = GM:GetConfig("Gameplay.Stamina.MinForSprint", 1)
@@ -135,7 +135,7 @@ function GM:DrainStaminaFromSprint(ply)
         return
     end
     
-    ply.Stamina = math.max(ply.Stamina - (self.StaminaSystem.SprintStaminaCost * 0.016), 0) -- 0.016 = 60 FPS
+    ply.Stamina = math.max(ply.Stamina - (self.StaminaSystem.SprintStaminaCost * 0.016), 0) -- SprintStaminaCost теперь в секунду, 0.016 = 1/60 сек
     
     if SERVER then
         ply:SetNWFloat("Stamina", ply.Stamina)
@@ -319,9 +319,9 @@ if SERVER then
         
         -- Проверяем бег (IN_SPEED)
         if mv:KeyDown(IN_SPEED) and ply:GetVelocity():Length() > 5 and GM:CanPlayerSprint(ply) then
-            ply.Stamina = math.max(0, ply.Stamina - GM.StaminaSystem.SprintStaminaCost * 0.016)
+            ply.Stamina = math.max(0, ply.Stamina - GM.StaminaSystem.SprintStaminaCost * 0.016) -- 0.016 = 1/60 сек
         else
-            ply.Stamina = math.min(ply.MaxStamina, ply.Stamina + GM.StaminaSystem.StaminaRegenRate * 0.016)
+            ply.Stamina = math.min(ply.MaxStamina, ply.Stamina + GM.StaminaSystem.StaminaRegenRate * 0.016) -- 0.016 = 1/60 сек
         end
 
         -- Синхронизация с клиентом (но не каждый тик!)
