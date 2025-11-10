@@ -317,6 +317,12 @@ if SERVER then
         if not IsValid(ply) or not GM.StaminaSystemEnabled then return end
         if not ply:Alive() then return end
         
+        -- Инициализируем стамину если её нет
+        if not ply.Stamina or not ply.MaxStamina then
+            GM:InitializeStamina(ply)
+            return
+        end
+        
         -- Проверяем бег (IN_SPEED)
         if mv:KeyDown(IN_SPEED) and ply:GetVelocity():Length() > 5 and GM:CanPlayerSprint(ply) then
             ply.Stamina = math.max(0, ply.Stamina - GM.StaminaSystem.SprintStaminaCost * 0.016) -- 0.016 = 1/60 сек
@@ -325,7 +331,7 @@ if SERVER then
         end
 
         -- Синхронизация с клиентом (но не каждый тик!)
-        if ply.NextStaminaUpdate < CurTime() then
+        if not ply.NextStaminaUpdate or ply.NextStaminaUpdate < CurTime() then
             ply:SetNWFloat("Stamina", ply.Stamina)
             ply.NextStaminaUpdate = CurTime() + 0.2 -- Отправляем 5 раз в секунду
         end

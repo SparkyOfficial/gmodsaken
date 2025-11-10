@@ -6,13 +6,19 @@
 ]]
 
 if SERVER then
+    -- Ensure GM table exists
+    if not _G.GM then
+        _G.GM = GAMEMODE or {}
+    end
+    local GM = _G.GM
+    
     -- Store match data during the round
     GM.CurrentMatchData = nil
     GM.MatchStartTime = nil
 
     -- Hook: Player joins server - Fetch their profile
     hook.Add("PlayerInitialSpawn", "GModsaken_FetchPlayerProfile", function(ply)
-        if not IsValid(ply) or not GM.Config.API.Enabled then return end
+        if not IsValid(ply) or not GM or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then return end
         
         local steamID = ply:SteamID64()
         
@@ -43,7 +49,7 @@ if SERVER then
 
     -- Hook: Round starts - Initialize match data
     hook.Add("GModsaken_GameStarted", "GModsaken_InitMatchData", function()
-        if not GM.Config.API.Enabled then return end
+        if not GM or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then return end
         
         -- Generate unique match ID
         local matchId = string.format("match_%s_%d", game.GetMap(), os.time())
@@ -84,7 +90,7 @@ if SERVER then
 
     -- Hook: Player kills another player - Update match stats
     hook.Add("PlayerDeath", "GModsaken_UpdateMatchStats", function(victim, inflictor, attacker)
-        if not GM.CurrentMatchData or not GM.Config.API.Enabled then return end
+        if not GM or not GM.CurrentMatchData or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then return end
         
         -- Update death count for victim
         if IsValid(victim) then
@@ -117,7 +123,7 @@ if SERVER then
 
     -- Hook: Quest completed - Record in match data and send to API
     hook.Add("GModsaken_QuestCompleted", "GModsaken_RecordQuestCompletion", function(ply, questName)
-        if not IsValid(ply) or not GM.Config.API.Enabled then return end
+        if not IsValid(ply) or not GM or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then return end
         
         local steamID = ply:SteamID64()
         
@@ -146,7 +152,7 @@ if SERVER then
 
     -- Hook: Round ends - Send match results to API
     hook.Add("GModsaken_GameEnded", "GModsaken_SendMatchResults", function()
-        if not GM.CurrentMatchData or not GM.Config.API.Enabled then return end
+        if not GM or not GM.CurrentMatchData or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then return end
         
         -- Calculate match duration
         if GM.MatchStartTime then

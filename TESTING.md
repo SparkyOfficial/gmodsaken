@@ -89,7 +89,7 @@ gmodsaken_enable_stamina
 ```
 gmodsaken_force_start
 ```
-или `!forcestart` в чате
+или `!forcestart` в чате (только для администраторов)
 
 **Принудительно завершить раунд:**
 ```
