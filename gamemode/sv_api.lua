@@ -6,6 +6,12 @@
 ]]
 
 if SERVER then
+    -- Ensure GM table exists
+    if not _G.GM then
+        _G.GM = GAMEMODE or {}
+    end
+    local GM = _G.GM
+    
     -- Request queue for offline mode
     GM.APIRequestQueue = GM.APIRequestQueue or {}
     GM.APIOnline = true
@@ -28,8 +34,8 @@ if SERVER then
         retryCount = retryCount or 0
         
         -- Check if API is enabled
-        if not GM.Config.API.Enabled then
-            APILog("WARN", "API is disabled in configuration")
+        if not GM or not GM.Config or not GM.Config.API or not GM.Config.API.Enabled then
+            APILog("WARN", "API is disabled or not configured")
             if callback then callback(false, "API disabled") end
             return
         end
