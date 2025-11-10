@@ -58,6 +58,7 @@ print("[GModsaken] Disintegration effects loaded")
 -- Include server-side components AFTER shared files
 if SERVER then
     print("[GModsaken] Including server files...")
+    include("sv_api.lua")  -- Web API integration (load first)
     include("sv_lobby.lua")
     include("sv_characters.lua")
     include("sv_admin.lua")
@@ -65,6 +66,7 @@ if SERVER then
     include("sv_spawnmenu.lua") -- Spawn menu system (server)
     include("sv_optimization.lua") -- Performance optimization
     include("progression/sv_progression.lua") -- Progression system (server)
+    include("sv_api_integration.lua")  -- API integration hooks (load last)
 end
 
 -- Include client-side components

@@ -7,6 +7,8 @@ const MongoStore = require('connect-mongo');
 const basicRoutes = require("./routes/index");
 const authRoutes = require("./routes/auth");
 const playerRoutes = require("./routes/players");
+const matchRoutes = require("./routes/matches");
+const serverRoutes = require("./routes/server");
 const { connectDB } = require("./config/database");
 const cors = require("cors");
 
@@ -64,6 +66,8 @@ app.on("error", (error) => {
 app.use(basicRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/players', playerRoutes);
+app.use('/api/matches', matchRoutes);
+app.use('/api/server', serverRoutes);
 
 // If no routes handled the request, it's a 404
 app.use((req, res, next) => {
