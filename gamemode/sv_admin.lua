@@ -161,20 +161,19 @@ local function AddBot(ply, cmd, args)
         return 
     end
     
-    local bot = player.CreateNextBot("Bot " .. math.random(1, 999))
-    if not IsValid(bot) then
-        if IsValid(ply) then
-            ply:ChatPrint("[ОШИБКА] Не удалось создать бота!")
-        end
-        return
-    end
+    -- В Garry's Mod нет встроенной поддержки ботов
+    -- Рекомендуем использовать аддон "Player Bots" из Workshop
+    -- https://steamcommunity.com/sharedfiles/filedetails/?id=2848862522
     
-    -- Notify
     if IsValid(ply) then
-        ply:ChatPrint("[АДМИН] Бот добавлен: " .. bot:Nick())
+        ply:ChatPrint("[ИНФОРМАЦИЯ] Для добавления ботов используйте:")
+        ply:ChatPrint("1. Установите аддон 'Player Bots' из Workshop")
+        ply:ChatPrint("2. Или используйте команду 'bot' в консоли сервера")
+        ply:ChatPrint("3. Или пригласите друзей для тестирования")
     end
     
-    print(string.format("[GModsaken] Bot added by %s", IsValid(ply) and ply:Nick() or "CONSOLE"))
+    print("[GModsaken] Bot command called - Garry's Mod doesn't have native bot support")
+    print("[GModsaken] Recommend using 'Player Bots' addon from Workshop")
 end
 
 -- Remove all bots
