@@ -573,6 +573,12 @@ function GM:StartLMSPhase()
     
     print("GModsaken: Фаза LMS началась! Время: " .. roundTimer .. " сек")
     
+    -- Останавливаем музыку погони перед началом LMS
+    for _, ply in pairs(player.GetAll()) do
+        net.Start("GModsaken_StopChaseMusic")
+        net.Send(ply)
+    end
+    
     -- Воспроизводим специальную музыку LMS
     local lmsMusic = GM:GetConfig("Gameplay.LMS.Music", "gmodsaken/music/EternalHopeEternalFight.mp3")
     for _, ply in pairs(player.GetAll()) do
@@ -811,6 +817,7 @@ end
 
 -- Проверка музыки Мясного
 function GM:CheckMyasnoiMusic()
+    -- Отключаем музыку погони во время LMS
     if GM.GameState ~= "PLAYING" then 
         return 
     end
