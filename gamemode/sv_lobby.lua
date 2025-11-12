@@ -3,10 +3,14 @@
     Copyright (C) 2024 GModsaken Contributors
 ]]
 
+print("[GModsaken] Loading sv_lobby.lua...")
+
 -- Get GM table reference
 local GM = _G.GM or GAMEMODE
 _G.GM = GM
 _G.GAMEMODE = GM
+
+print("[GModsaken] sv_lobby.lua - GM table: " .. tostring(GM))
 
 -- Создаем сетевые сообщения
 util.AddNetworkString("GModsaken_UpdateStamina")
@@ -1177,7 +1181,9 @@ local function GameTimer()
     end
 end
 
+print("[GModsaken] Creating GameTimer...")
 timer.Create("GModsaken_GameTimer", 1, 0, GameTimer)
+print("[GModsaken] GameTimer created successfully!")
 
 -- Хуки для управления игроками
 hook.Add("PlayerInitialSpawn", "GModsaken_PlayerSpawn", function(ply)
@@ -1872,3 +1878,6 @@ concommand.Add("gmodsaken_give_gravgun", function(ply, cmd, args)
         ply:ChatPrint("У вас уже есть грави пушка!")
     end
 end) 
+
+pri
+nt("[GModsaken] sv_lobby.lua loaded successfully!")
