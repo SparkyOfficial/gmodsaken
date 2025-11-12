@@ -83,7 +83,9 @@ print("[GModsaken] Disintegration effects loaded")
 if SERVER then
     print("[GModsaken] Including server files...")
     include("sv_api.lua")  -- Web API integration (load first)
+    print("[GModsaken] About to include sv_lobby.lua...")
     include("sv_lobby.lua")
+    print("[GModsaken] sv_lobby.lua included!")
     include("sv_characters.lua")
     include("sv_admin.lua")
     include("sv_bots.lua")  -- Bot system for testing
