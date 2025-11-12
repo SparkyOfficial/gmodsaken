@@ -25,6 +25,30 @@ if not _G.GM then
 end
 _G.GAMEMODE = _G.GM
 
+-- Add client-side Lua files
+AddCSLuaFile("cl_init.lua")
+AddCSLuaFile("shared.lua")
+AddCSLuaFile("sh_config.lua")
+AddCSLuaFile("sh_teams.lua")
+AddCSLuaFile("sh_characters.lua")
+AddCSLuaFile("sh_stamina.lua")
+AddCSLuaFile("sh_quests.lua")
+AddCSLuaFile("sh_music.lua")
+AddCSLuaFile("sh_weather.lua")
+AddCSLuaFile("sh_weapons.lua")
+AddCSLuaFile("core/sh_utils.lua")
+AddCSLuaFile("core/sh_ammo.lua")
+AddCSLuaFile("core/sh_tf_ammo.lua")
+
+-- Add client-only files
+AddCSLuaFile("cl_character_menu.lua")
+AddCSLuaFile("cl_hud.lua")
+AddCSLuaFile("cl_spawnmenu.lua")
+AddCSLuaFile("cl_music.lua")
+AddCSLuaFile("cl_prop_menu.lua")
+AddCSLuaFile("cl_news_menu.lua")
+AddCSLuaFile("hud/cl_hud_components.lua")
+
 -- Include shared code first (this will define the basic GM structure)
 print("[GModsaken] Including shared.lua...")
 include("shared.lua")

@@ -18,17 +18,22 @@ GM.Email 		= ""
 GM.Website 		= ""
 GM.FolderName 	= "gmodsaken"
 
--- Подключаем центральный файл конфигурации
-include("sh_config.lua")
-
--- Базовые настройки гейммода
+-- Базовые настройки гейммода (до загрузки конфига)
 GM.Base = "base"
 GM.TeamBased = true
 GM.AllowAutoTeam = false
 GM.AllowSpectating = true
 GM.SelectClass = true
 GM.SecondsBetweenTeamSwitches = 10
-GM.GameLength = GM:GetConfig("Gameplay.RoundTime", 600)
+
+-- Подключаем центральный файл конфигурации
+if SERVER then
+    AddCSLuaFile("sh_config.lua")
+end
+include("sh_config.lua")
+
+-- Настройки после загрузки конфига
+GM.GameLength = (GM.GetConfig and GM:GetConfig("Gameplay.RoundTime", 600)) or 600
 GM.RoundLimit = 5
 GM.VotingDelay = 5
 GM.ShowTeamName = true
@@ -201,17 +206,19 @@ end)
 
 -- Подключаем shared файлы
 
--- Создаем сетевые сообщения
-util.AddNetworkString("GModsaken_UpdateGameState")
-util.AddNetworkString("GModsaken_OpenCharacterMenu")
-util.AddNetworkString("GModsaken_SelectCharacter")
-util.AddNetworkString("GModsaken_CharacterSelected")
-util.AddNetworkString("GModsaken_PlayMusic")
-util.AddNetworkString("GModsaken_StopMusic")
-util.AddNetworkString("GModsaken_UpdateMusicVolume")
-util.AddNetworkString("GModsaken_UpdateMusicEnabled")
-util.AddNetworkString("GModsaken_SwitchMusic")
-util.AddNetworkString("GModsaken_LMSHighlight")
+-- Создаем сетевые сообщения (только на сервере)
+if SERVER then
+    util.AddNetworkString("GModsaken_UpdateGameState")
+    util.AddNetworkString("GModsaken_OpenCharacterMenu")
+    util.AddNetworkString("GModsaken_SelectCharacter")
+    util.AddNetworkString("GModsaken_CharacterSelected")
+    util.AddNetworkString("GModsaken_PlayMusic")
+    util.AddNetworkString("GModsaken_StopMusic")
+    util.AddNetworkString("GModsaken_UpdateMusicVolume")
+    util.AddNetworkString("GModsaken_UpdateMusicEnabled")
+    util.AddNetworkString("GModsaken_SwitchMusic")
+    util.AddNetworkString("GModsaken_LMSHighlight")
+end
 
 -- Функция для награждения XP за помощь товарищу
 function GM:AwardAssistXP(ply, assistType)

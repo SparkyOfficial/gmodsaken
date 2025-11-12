@@ -176,6 +176,8 @@ function GM:CheckGameStart()
     local playerCount = #player.GetAll()
     local minPlayers = gm.MinPlayers or 1  -- Default to 1 player for testing
     
+    print(string.format("[DEBUG] CheckGameStart: Players=%d, MinPlayers=%d, State=%s", playerCount, minPlayers, gm.GameState))
+    
     if playerCount >= minPlayers then
         if gm.GameState == "LOBBY" then
             gm.GameState = "PREPARING"
@@ -1094,10 +1096,14 @@ local function GameTimer()
         return 
     end
     
+    print(string.format("[DEBUG] GameTimer: State=%s", gm.GameState or "nil"))
+    
     if gm.GameState == "LOBBY" then
         -- В лобби проверяем, можно ли начать игру
         if gm.CheckGameStart then
             gm:CheckGameStart()
+        else
+            print("[DEBUG] CheckGameStart не найден!")
         end
         
     elseif gm.GameState == "PREPARING" then

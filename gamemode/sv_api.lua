@@ -277,7 +277,7 @@ if SERVER then
 
     -- Timer to update server status
     timer.Create("GModsaken_UpdateServerStatus", 30, 0, function()
-        if GM and GM.UpdateServerStatus and GM.Config.API.Enabled then
+        if GM and GM.UpdateServerStatus and GM.Config and GM.Config.API and GM.Config.API.Enabled then
             GM:UpdateServerStatus()
         end
     end)
